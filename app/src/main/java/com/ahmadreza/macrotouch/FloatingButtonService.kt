@@ -169,7 +169,7 @@ class FloatingButtonService : Service() {
     private fun clearButtons() {
         hideViews()
         items.clear()
-        prefs.edit().putString("ids", "").putBoolean("visible", true).apply()
+        prefs.edit().putString("ids", "").putInt("next_id", 1).putBoolean("visible", true).apply()
         visible = true
     }
 
