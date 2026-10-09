@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MacroTouch</string>
+    <string name="accessibility_description">اجرای لمس‌های متوالی در نقاط انتخاب‌شده توسط کاربر</string>
+</resources>
