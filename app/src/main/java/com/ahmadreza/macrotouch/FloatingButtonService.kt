@@ -138,8 +138,12 @@ class FloatingButtonService : Service() {
             Toast.makeText(this, "در تنظیمات دسترس‌پذیری، MacroTouch را فعال کن.", Toast.LENGTH_LONG).show()
             return
         }
+        val swipeUp = prefs.getBoolean("swipe_up", false)
+        val distancePx = prefs.getInt("swipe_distance_dp", 120) * resources.displayMetrics.density
+        val durationMs = prefs.getLong("gesture_duration_ms", 220L)
+        val delayMs = prefs.getLong("action_delay_ms", 250L)
         hideViews()
-        automation.performMacro(points) { if (visible) showViews() }
+        automation.performMacro(points, swipeUp, distancePx, durationMs, delayMs) { if (visible) showViews() }
     }
 
     private fun hideViews() {
