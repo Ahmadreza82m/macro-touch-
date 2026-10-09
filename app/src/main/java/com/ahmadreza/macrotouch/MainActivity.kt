@@ -1,6 +1,7 @@
 package com.ahmadreza.macrotouch
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -24,6 +25,7 @@ class MainActivity : Activity() {
     private val muted = Color.rgb(151, 164, 184)
     private lateinit var status: TextView
     private lateinit var overlayDot: TextView
+    private lateinit var profileInfo: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +105,18 @@ class MainActivity : Activity() {
         content.addView(hero)
         content.addView(space(24))
 
+        section(content, "پروفایل ماکرو", "هر پروفایل کنترل‌ها و دکمهٔ اجرای مستقل خودش را دارد")
+        val profileCard = cardColumn()
+        profileInfo = text("", 13f, accent, true)
+        profileInfo.setPadding(dp(2), dp(12), dp(2), dp(4))
+        profileCard.addView(profileInfo)
+        addRow(profileCard, "▦", "انتخاب پروفایل فعال", "دکمه‌های جدید به پروفایل انتخاب‌شده اضافه می‌شوند", purple) {
+            chooseProfile()
+        }
+        content.addView(profileCard)
+        updateProfileLabel()
+        content.addView(space(22))
+
         section(content, "شروع سریع", "دکمه‌های عملیاتی و دکمهٔ اجرای ماکرو")
         val pair = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         pair.addView(actionCard("＋", "دکمهٔ عملیات", "افزودن نقطهٔ لمس", Color.rgb(39, 91, 151)) {
@@ -171,6 +185,27 @@ class MainActivity : Activity() {
 
         setContentView(root)
         updateStatus()
+    }
+
+
+    private fun chooseProfile() {
+        val prefs = getSharedPreferences("MacroTouch", MODE_PRIVATE)
+        val selected = (prefs.getInt("current_profile", 1) - 1).coerceIn(0, 2)
+        AlertDialog.Builder(this)
+            .setTitle("انتخاب پروفایل ماکرو")
+            .setSingleChoiceItems(arrayOf("ماکرو ۱", "ماکرو ۲", "ماکرو ۳"), selected) { dialog, which ->
+                prefs.edit().putInt("current_profile", which + 1).apply()
+                updateProfileLabel()
+                dialog.dismiss()
+            }
+            .setNegativeButton("بستن", null)
+            .show()
+    }
+
+    private fun updateProfileLabel() {
+        if (!::profileInfo.isInitialized) return
+        val current = getSharedPreferences("MacroTouch", MODE_PRIVATE).getInt("current_profile", 1).coerceIn(1, 3)
+        profileInfo.text = "پروفایل انتخاب‌شده: ماکرو $current"
     }
 
     private fun section(parent: LinearLayout, title: String, subtitle: String) {
