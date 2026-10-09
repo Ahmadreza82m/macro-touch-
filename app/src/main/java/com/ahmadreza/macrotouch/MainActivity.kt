@@ -6,8 +6,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.Gravity
-import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -24,7 +22,7 @@ class MainActivity : Activity() {
         window.navigationBarColor = bg
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(24, 34, 24, 24)
+            setPadding(22, 30, 22, 22)
             setBackgroundColor(bg)
         }
         root.addView(TextView(this).apply {
@@ -34,70 +32,91 @@ class MainActivity : Activity() {
             typeface = android.graphics.Typeface.DEFAULT_BOLD
         })
         root.addView(TextView(this).apply {
-            text = "FLOATING CONTROL LAB  •  v0.1"
+            text = "FLOATING CONTROL STUDIO  •  v0.2"
             textSize = 12f
             setTextColor(accent)
-            setPadding(0, 8, 0, 24)
-        })
-        val info = TextView(this).apply {
-            text = "نسخه آزمایشی\n\nدکمه‌های شناور را روی صفحه اضافه کن، آن‌ها را با کشیدن جابه‌جا کن و برای هرکدام ظاهر و جای جداگانه داشته باش. این نسخه فعلاً کنترل‌های شناور را آزمایش می‌کند و لمس خودکار یا نشانه‌گیری انجام نمی‌دهد."
-            textSize = 16f
-            setTextColor(Color.rgb(220, 225, 235))
-            setPadding(18, 18, 18, 18)
-            setBackgroundColor(panel)
-        }
-        root.addView(info, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 22 })
-        status = TextView(this).apply {
-            textSize = 14f
-            setTextColor(Color.LTGRAY)
-            setPadding(0, 0, 0, 14)
-        }
-        root.addView(status)
-        root.addView(makeButton("۱. اجازه نمایش روی برنامه‌های دیگر", accent) {
-            if (!Settings.canDrawOverlays(this)) {
-                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-            } else updateStatus()
-        })
-        root.addView(makeButton("۲. افزودن دکمه شناور", Color.rgb(49, 59, 76)) {
-            if (Settings.canDrawOverlays(this)) {
-                startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.ADD))
-                status.text = "یک دکمه اضافه شد. می‌توانی آن را روی صفحه نگه داری و جابه‌جا کنی."
-            } else {
-                status.text = "ابتدا اجازه نمایش روی برنامه‌های دیگر را فعال کن."
-            }
-        })
-        root.addView(makeButton("حذف همه دکمه‌های شناور", Color.rgb(49, 59, 76)) {
-            startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.CLEAR))
-            status.text = "درخواست حذف دکمه‌ها ارسال شد."
+            setPadding(0, 8, 0, 20)
         })
         root.addView(TextView(this).apply {
-            text = "نکته: برای جابه‌جایی، دکمه را لمس کن و بکش. برای بستن، از داخل همین برنامه «حذف همه» را بزن."
+            text = "۱) دکمه‌های عملیات را اضافه کن و روی نقاط دلخواه بکش.\n۲) دکمهٔ بنفش «اجرا» را جداگانه اضافه کن.\n۳) با لمس اجرا، نقاط عملیات به‌ترتیب لمس می‌شوند. برای این قابلیت، سرویس دسترس‌پذیری MacroTouch را خودت فعال کن."
+            textSize = 15f
+            setTextColor(Color.rgb(220, 225, 235))
+            setPadding(16, 16, 16, 16)
+            setBackgroundColor(panel)
+        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 18 })
+        status = TextView(this).apply {
             textSize = 13f
-            setTextColor(Color.rgb(160, 170, 188))
-            setPadding(0, 24, 0, 0)
+            setTextColor(Color.rgb(180, 195, 215))
+            setPadding(0, 0, 0, 12)
+        }
+        root.addView(status)
+        addAction(root, "اجازهٔ نمایش روی برنامه‌های دیگر", accent) {
+            if (!Settings.canDrawOverlays(this)) {
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+            } else status.text = "مجوز نمایش شناور فعال است."
+        }
+        addAction(root, "＋ افزودن دکمهٔ عملیات", Color.rgb(42, 65, 92)) {
+            if (checkOverlay()) startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.ADD_ACTION))
+        }
+        addAction(root, "▶ افزودن دکمهٔ اجرا / محرک", Color.rgb(80, 54, 120)) {
+            if (checkOverlay()) startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.ADD_TRIGGER))
+        }
+        addAction(root, "فعال‌سازی اجرای لمس‌ها", Color.rgb(49, 59, 76)) {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
+        addAction(root, "تغییر اندازهٔ دکمه‌ها", Color.rgb(49, 59, 76)) {
+            startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.SIZE))
+        }
+        addAction(root, "تغییر شفافیت دکمه‌ها", Color.rgb(49, 59, 76)) {
+            startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.OPACITY))
+        }
+        addAction(root, "پنهان کردن دکمه‌های شناور", Color.rgb(49, 59, 76)) {
+            startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.HIDE))
+            status.text = "دکمه‌ها پنهان شدند؛ برنامه را باز کن و نمایش دوباره را بزن."
+        }
+        addAction(root, "نمایش دوبارهٔ دکمه‌ها", Color.rgb(49, 59, 76)) {
+            startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.SHOW))
+            status.text = "درخواست نمایش دوباره ارسال شد."
+        }
+        addAction(root, "حذف همهٔ دکمه‌ها", Color.rgb(95, 43, 52)) {
+            startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.CLEAR))
+            status.text = "همهٔ دکمه‌ها حذف شدند."
+        }
+        root.addView(TextView(this).apply {
+            text = "جای دکمه‌ها پس از جابه‌جایی ذخیره می‌شود. اجرای لمس‌ها فقط پس از فعال‌سازی دستی دسترس‌پذیری انجام می‌شود."
+            textSize = 12f
+            setTextColor(Color.rgb(150, 160, 178))
+            setPadding(2, 12, 2, 20)
         })
-        setContentView(root)
+        setContentView(android.widget.ScrollView(this).apply { addView(root) })
         updateStatus()
+    }
+
+    private fun checkOverlay(): Boolean {
+        if (Settings.canDrawOverlays(this)) return true
+        status.text = "ابتدا اجازه نمایش روی برنامه‌های دیگر را فعال کن."
+        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        return false
+    }
+
+    private fun updateStatus() {
+        if (::status.isInitialized) status.text =
+            if (Settings.canDrawOverlays(this)) "وضعیت مجوز شناور: فعال" else "وضعیت مجوز شناور: غیرفعال"
     }
 
     override fun onResume() {
         super.onResume()
-        if (::status.isInitialized) updateStatus()
+        updateStatus()
     }
 
-    private fun updateStatus() {
-        status.text = if (Settings.canDrawOverlays(this))
-            "وضعیت مجوز: فعال"
-        else "وضعیت مجوز: هنوز فعال نشده"
-    }
-
-    private fun makeButton(label: String, color: Int, action: () -> Unit): Button =
-        Button(this).apply {
+    private fun addAction(root: LinearLayout, label: String, color: Int, action: () -> Unit) {
+        root.addView(Button(this).apply {
             text = label
             textSize = 14f
+            isAllCaps = false
             setTextColor(Color.WHITE)
             setBackgroundColor(color)
             setOnClickListener { action() }
-            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 12 }
-        }
+        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 9 })
+    }
 }
