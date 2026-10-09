@@ -16,7 +16,7 @@ import android.widget.Toast
 import kotlin.math.abs
 
 class FloatingButtonService : Service() {
-    private data class Item(val id: Int, val trigger: Boolean, val view: TextView, val params: WindowManager.LayoutParams)
+    private data class Item(val id: Int, val trigger: Boolean, val profileId: Int, val view: TextView, val params: WindowManager.LayoutParams)
     private lateinit var wm: WindowManager
     private val items = mutableListOf<Item>()
     private val prefs by lazy { getSharedPreferences("MacroTouch", MODE_PRIVATE) }
@@ -47,6 +47,7 @@ class FloatingButtonService : Service() {
     private fun addButton(trigger: Boolean) {
         val id = prefs.getInt("next_id", 1)
         prefs.edit().putInt("next_id", id + 1).putBoolean("trigger_$id", trigger)
+            .putInt("profile_$id", prefs.getInt("current_profile", 1))
             .putString("ids", (items.map { it.id } + id).joinToString(",")).apply()
         createItem(id, trigger)
     }
@@ -79,7 +80,7 @@ class FloatingButtonService : Service() {
             x = prefs.getInt("x_$id", 40 + (id - 1) * 20)
             y = prefs.getInt("y_$id", 180 + (id - 1) * 20)
         }
-        val item = Item(id, trigger, label, params)
+        val item = Item(id, trigger, prefs.getInt("profile_$id", 1), label, params)
         attachDrag(item)
         items.add(item)
         if (visible) addView(item)
@@ -111,7 +112,7 @@ class FloatingButtonService : Service() {
                     val moved = abs(event.rawX - downX) > 8 || abs(event.rawY - downY) > 8
                     prefs.edit().putInt("x_${item.id}", item.params.x).putInt("y_${item.id}", item.params.y).apply()
                     if (!moved) {
-                        if (item.trigger) runMacro() else {
+                        if (item.trigger) runMacro(item.profileId) else {
                             val old = item.view.text
                             item.view.text = "•"
                             item.view.postDelayed({ if (items.any { it.id == item.id }) item.view.text = old }, 250)
@@ -124,12 +125,12 @@ class FloatingButtonService : Service() {
         }
     }
 
-    private fun runMacro() {
-        val points = items.filter { !it.trigger }.map {
+    private fun runMacro(profileId: Int) {
+        val points = items.filter { !it.trigger && it.profileId == profileId }.map {
             Pair(it.params.x + it.params.width / 2f, it.params.y + it.params.height / 2f)
         }
         if (points.isEmpty()) {
-            Toast.makeText(this, "اول دکمه‌های عملیات را اضافه کن.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "برای ماکرو ${profileId} اول دکمهٔ عملیات اضافه کن.", Toast.LENGTH_SHORT).show()
             return
         }
         val automation = TouchAutomationService.instance
