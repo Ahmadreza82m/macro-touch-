@@ -15,6 +15,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 
 class MainActivity : Activity() {
     private val bg = Color.rgb(12, 16, 24)
@@ -173,8 +174,40 @@ class MainActivity : Activity() {
         content.addView(utilities)
         content.addView(space(22))
 
+        section(content, "تنظیمات حرکت", "نوع حرکت، مسافت، مدت و فاصلهٔ بین عملیات")
+        val motion = cardColumn()
+        addRow(motion, "↕", "نوع حرکت", "بین لمس معمولی و کشیدن رو به بالا جابه‌جا شو", accent) {
+            val prefs = getSharedPreferences("MacroTouch", MODE_PRIVATE)
+            val next = !prefs.getBoolean("swipe_up", false)
+            prefs.edit().putBoolean("swipe_up", next).apply()
+            Toast.makeText(this, if (next) "حرکت: کشیدن رو به بالا" else "حرکت: لمس معمولی", Toast.LENGTH_SHORT).show()
+        }
+        addDivider(motion)
+        addRow(motion, "↕", "مسافت حرکت", "چرخهٔ مسافت: ۸۰، ۱۲۰، ۱۶۰ و ۲۰۰ dp", purple) {
+            val prefs = getSharedPreferences("MacroTouch", MODE_PRIVATE)
+            val next = when (prefs.getInt("swipe_distance_dp", 120)) { 80 -> 120; 120 -> 160; 160 -> 200; else -> 80 }
+            prefs.edit().putInt("swipe_distance_dp", next).apply()
+            Toast.makeText(this, "مسافت حرکت: $next dp", Toast.LENGTH_SHORT).show()
+        }
+        addDivider(motion)
+        addRow(motion, "◷", "مدت حرکت", "سرعت کشیدن را با مدت حرکت تنظیم کن", Color.rgb(229, 174, 97)) {
+            val prefs = getSharedPreferences("MacroTouch", MODE_PRIVATE)
+            val next = when (prefs.getLong("gesture_duration_ms", 220L)) { 120L -> 220L; 220L -> 350L; 350L -> 500L; else -> 120L }
+            prefs.edit().putLong("gesture_duration_ms", next).apply()
+            Toast.makeText(this, "مدت حرکت: $next میلی‌ثانیه", Toast.LENGTH_SHORT).show()
+        }
+        addDivider(motion)
+        addRow(motion, "⋯", "تأخیر بین عملیات", "فاصلهٔ زمانی بین هر دو حرکت", Color.rgb(88, 214, 158)) {
+            val prefs = getSharedPreferences("MacroTouch", MODE_PRIVATE)
+            val next = when (prefs.getLong("action_delay_ms", 250L)) { 100L -> 250L; 250L -> 500L; 500L -> 800L; else -> 100L }
+            prefs.edit().putLong("action_delay_ms", next).apply()
+            Toast.makeText(this, "تأخیر: $next میلی‌ثانیه", Toast.LENGTH_SHORT).show()
+        }
+        content.addView(motion)
+        content.addView(space(22))
+
         val note = TextView(this).apply {
-            text = "نکته: اجرای لمس‌ها فقط با فعال‌سازی دستی سرویس دسترس‌پذیری اندروید انجام می‌شود. این نسخه هنوز ویرایشگر حرکت و پروفایل‌های مستقل ندارد."
+            text = "نکته: پروفایل‌ها از هم جدا هستند و حرکت لمسی یا کشیدن رو به بالا قابل تنظیم است. اجرای خودکار فقط پس از فعال‌سازی دستی سرویس دسترس‌پذیری انجام می‌شود."
             textSize = 12f
             setTextColor(muted)
             setPadding(dp(4), dp(4), dp(4), dp(12))
