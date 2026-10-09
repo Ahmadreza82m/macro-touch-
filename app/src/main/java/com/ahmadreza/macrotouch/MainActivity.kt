@@ -228,6 +228,7 @@ class MainActivity : Activity() {
             .setTitle("انتخاب پروفایل ماکرو")
             .setSingleChoiceItems(arrayOf("ماکرو ۱", "ماکرو ۲", "ماکرو ۳"), selected) { dialog, which ->
                 prefs.edit().putInt("current_profile", which + 1).apply()
+                startService(Intent(this, FloatingButtonService::class.java).setAction(FloatingButtonService.PROFILE_CHANGED))
                 updateProfileLabel()
                 dialog.dismiss()
             }
