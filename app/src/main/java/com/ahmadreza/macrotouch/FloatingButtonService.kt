@@ -57,8 +57,10 @@ class FloatingButtonService : Service() {
         val density = resources.displayMetrics.density
         val size = prefs.getInt("size_dp", 58)
         val opacity = prefs.getFloat("opacity", 0.90f)
+        val profileId = prefs.getInt("profile_$id", 1).coerceIn(1, 3)
+        val displayNumber = items.count { !it.trigger && it.profileId == profileId } + 1
         val label = TextView(this).apply {
-            text = if (trigger) "▶" else id.toString()
+            text = if (trigger) "▶" else displayNumber.toString()
             textSize = if (trigger) 19f else 17f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
@@ -81,7 +83,7 @@ class FloatingButtonService : Service() {
             x = prefs.getInt("x_$id", 40 + (id - 1) * 20)
             y = prefs.getInt("y_$id", 180 + (id - 1) * 20)
         }
-        val item = Item(id, trigger, prefs.getInt("profile_$id", 1), label, params)
+        val item = Item(id, trigger, profileId, label, params)
         attachDrag(item)
         items.add(item)
         if (visible) addView(item)
