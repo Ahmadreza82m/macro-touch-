@@ -40,6 +40,7 @@ class FloatingButtonService : Service() {
             SHOW -> { visible = true; prefs.edit().putBoolean("visible", true).apply(); showViews() }
             SIZE -> cycleSize()
             OPACITY -> cycleOpacity()
+            PROFILE_CHANGED -> refreshProfileViews()
         }
         return START_NOT_STICKY
     }
@@ -87,7 +88,15 @@ class FloatingButtonService : Service() {
     }
 
     private fun addView(item: Item) {
+        if (item.profileId != activeProfile()) return
         try { if (item.view.parent == null) wm.addView(item.view, item.params) } catch (_: Exception) { }
+    }
+
+    private fun activeProfile(): Int = prefs.getInt("current_profile", 1).coerceIn(1, 3)
+
+    private fun refreshProfileViews() {
+        hideViews()
+        if (visible) showViews()
     }
 
     private fun attachDrag(item: Item) {
@@ -189,5 +198,6 @@ class FloatingButtonService : Service() {
         const val SHOW = "com.ahmadreza.macrotouch.SHOW"
         const val SIZE = "com.ahmadreza.macrotouch.SIZE"
         const val OPACITY = "com.ahmadreza.macrotouch.OPACITY"
+        const val PROFILE_CHANGED = "com.ahmadreza.macrotouch.PROFILE_CHANGED"
     }
 }
